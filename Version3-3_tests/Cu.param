@@ -55,5 +55,5 @@ lda
 
 [KBdesign]
 s
-1
-au 0.01 1.60 -1.54 
+30 #This must match the grid_size variable in kb_find
+au 0.01 1.60 -1.54 #This must start with 'au 0.01'. All pre-existing boxes will be replaced.
