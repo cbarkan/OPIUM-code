@@ -30,11 +30,11 @@ New in version 3-2
 ##################################
 #INPUTS SECTION: Adjust the variables below as desired.
 ##################################
-filename = 'mo' #(must be string) Write this as string without a file extension (i.e. 'Fe' is correct, 'Fe.param' is incorrect)
+filename = 'v2' #(must be string) Write this as string without a file extension (i.e. 'Fe' is correct, 'Fe.param' is incorrect)
 initial_box_num = 4 #(must be integer) Number of KB boxes at start 
 box_splits = 3 #(must be integer) Number of times KB boxes qill split in half 
 max_F = 1.5 #(must be float, if integer is desired, write 2.0, for example) Outer limit of KB boxes (in a.u.)
-tconfig_num = 10 #(must be integer) Number of test configurations, this number must match the corresponding number in the .param file
+tconfig_num = 6 #(must be integer) Number of test configurations, this number must match the corresponding number in the .param file
 alpha_step = 1.0 #(must be float, if integer is desired, write 2.0, for example) Initial step size in the search for optimal alpha
 local_orb = 's' #(must be string, either 's', 'p', 'd', or 'f') local orbital setting for augmentation function. 
 dV = 0.1 #(must be float) d(KB box height) for slope calculation and alpha search.
@@ -87,17 +87,24 @@ def err_check(): #Runs OPIUM, checks test config errors and returns their sum
     else: #No error occured
         Er = np.ones((tconfig_num,2))
         Er_index = 0
+        DD = np.ones((tconfig_num*(tconfig_num-1)/2,1))
+        DD_index = 0
         for line in rpt:
             if line.startswith(" AE-NL-  t"):
                 Er[Er_index,0] = float(line[22:38])
                 Er[Er_index,1] = float(line[42:58])
                 Er_index += 1
+            elif line.startswith(" AE-NL-   ") and (not line.startswith(" AE-NL-   i")):
+                DD[Er_index,0] = abs(float(line[22:33]))
+                DD_index += 1
         
         rpt_file.write('#kb_find read-receipt')
         rpt_file.close
 
         #Er_stat = sum(Er[:,0]) #Sum of test config eigenvalue errors
-        Er_stat = sum(sum(Er)) #Sum of eigenvalue errors and norm errors
+        #Er_stat = sum(sum(DD)) #Sum of energy differences
+        #Er_stat = sum(sum(Er)) #Sum of eigenvalue errors and norm errors
+        Er_stat = sum(sum(Er))/tconfig_num + sum(sum(DD))/(tconfig_num*(tconfig_num-1)/2) #Sum of avg eigenvalue error, avg norm error, and avg energy difference
     return Er_stat
 
 #_____________________________________________________
@@ -115,17 +122,18 @@ before = err_check() #Run an initial trial with no boxes: no OPIUM error should 
 #Find random starting point that does not produce errors
 before = float('inf')
 while before == float('inf'):
-    for i in np.arange(1,grid_size+1): #Set box bounds
+    for i in np.arange(0,grid_size):
         grid[i,1] = uniform(3,-3)
     
     setKB(grid)
     before = err_check()
-
+print 'Initial grid:'
+print grid
 
 for mm in range(1,box_splits+1):
     slope = np.ones((grid_size+1,1))
     for jj in range(2):
-        print 'Er_stat w/ initial boxes: ' + str(before) + '\n'
+        print 'Er_stat w/ initial grid: ' + str(before) + '\n'
         for i in range(grid_size): #Find slope for each bin
             grid[i,1] = grid[i,1] + dV #Change height of ith box by dV
             setKB(grid)
