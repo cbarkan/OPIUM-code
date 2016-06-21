@@ -96,7 +96,8 @@ def err_check(): #Runs OPIUM, checks test config errors and returns their sum
         rpt_file.write('#kb_find read-receipt')
         rpt_file.close
 
-        Er_stat = sum(Er[:,0]) #Sum of test config erroggrs
+        #Er_stat = sum(Er[:,0]) #Sum of test config eigenvalue errors
+        Er_stat = sum(sum(Er)) #Sum of eigenvalue errors and norm errors
     return Er_stat
 
 #_____________________________________________________
