@@ -1,0 +1,165 @@
+Report on kb_find 3-2:
+
+Below are the improvements that kb_find.py produced for Cu, Mo, and V, relative to having no box.
+
+For the tests below, the listed "error" is the value that the the script attempts to minimize. For these tests, it is the sum of the average eigenvalue error for each test config., avergae norm error for each test config, and average energy difference between test configs. This can be easily changed however, and I plan to do tests where the "error" is the eigenvalue error + norm error of a single test config, in order to see if the errors of a single test config can be brought to near 0.
+
+The arrays below show the range and height of each box. The left column shows the inner boundary of each KB box in a.u. (the outer boundary is equal to the inner boundary of the next box, so that the first box in the array for Cu has bounds 0.01 au to 0.09375 au). The right column shows the height of each box.
+
+Cu:
+No box: error = 13.1551037524
+With box from script: error = 6.49878967207
+[[ 0.01       -2.59801503]
+ [ 0.09375    -2.59801263]
+ [ 0.1875     -2.59790769]
+ [ 0.28125    -2.59780323]
+ [ 0.375       0.51167949]
+ [ 0.46875     0.51230494]
+ [ 0.5625      0.51526827]
+ [ 0.65625     0.51688011]
+ [ 0.75        1.04777654]
+ [ 0.84375     1.052973  ]
+ [ 0.9375      1.08508419]
+ [ 1.03125     1.11290638]
+ [ 1.125      -2.98816999]
+ [ 1.21875    -2.91744105]
+ [ 1.3125     -2.80815954]
+ [ 1.40625    -2.71707766]
+ [ 1.5        0]]
+
+
+Mo:
+No box: error = 330.997338656
+With box from script: error = 17.3565383961
+[[ 0.01        0.94249171]
+ [ 0.09375     0.94152222]
+ [ 0.1875      1.11232443]
+ [ 0.28125     1.11034393]
+ [ 0.375       6.4549147 ]
+ [ 0.46875     6.45552591]
+ [ 0.5625      6.55895167]
+ [ 0.65625     6.56273032]
+ [ 0.75       -3.15820516]
+ [ 0.84375    -3.17388572]
+ [ 0.9375     -3.56958503]
+ [ 1.03125    -3.62377101]
+ [ 1.125      -0.81085598]
+ [ 1.21875    -0.87684853]
+ [ 1.3125     -0.11701066]
+ [ 1.40625    -0.26501241]
+ [ 1.5        0]]
+ 
+ 
+V:
+No box: error = 757.996801181
+With box from script: error = 111.747001292
+[[  1.00000000e-02   4.70889787e-02]
+ [  9.37500000e-02   4.73762356e-02]
+ [  1.87500000e-01   4.82813635e-02]
+ [  2.81250000e-01   4.79278452e-02]
+ [  3.75000000e-01   2.56939189e+00]
+ [  4.68750000e-01   2.56877396e+00]
+ [  5.62500000e-01   2.56760691e+00]
+ [  6.56250000e-01   2.56748789e+00]
+ [  7.50000000e-01   4.61275273e+00]
+ [  8.43750000e-01   4.61332913e+00]
+ [  9.37500000e-01   4.61299738e+00]
+ [  1.03125000e+00   4.61120965e+00]
+ [  1.12500000e+00   1.77727471e+00]
+ [  1.21875000e+00   1.76081209e+00]
+ [  1.31250000e+00   1.68210604e+00]
+ [  1.40625000e+00   1.64628477e+00]
+ [  1.50000000e+00  0]]
+
+ 
+One problem I've noticed is that when boxes split, their heights vary only slightly from the height of their "parent" box. I believe this is because the slope needs to be recalculated many more times than is done in my current code. I will update the code and test this to see if it fixes the problem.
+
+The tests I've done also suggest that there are many local minima in the error as a function of KB box setting. The current algorithm will find the local minimum nearest the starting point, and I've found that changing the starting point produces very different "optimized" KB box heights, some of which have lower error than others.
+
+Another piece of evidence for multiple, closely spaced, minima is the following excerpt from a _hist.txt file: 
+
+The excerpt below shows the output of the script as it searches for the value of alpha which minimizes error. Adjusting alpha represents moving along a "path through KB-box space" in the direction of the previously calculated gradient. The output shows that the error has two local minima for KB box settings with heights within 0.1mRy of one another for each box.
+
+Er_stat w/ initial grid: 9.5517481012
+
+nowU: 14.4387744991   alpha = 0.0212862362575
+nowL: 11.6205562874   alpha = 0.0131556174986
+new alpha bounds: 0  0.0212862362575
+[[  1.00000000e-02   1.92511848e+00]
+ [  3.75000000e-01   1.91390865e+00]
+ [  7.50000000e-01   1.92178016e+00]
+ [  1.12500000e+00   1.88703470e+00]
+ [  1.50000000e+00  -1.31556175e-03]]
+
+nowU: 11.6205562874   alpha = 0.0131556175001
+nowL: 9.8900447436   alpha = 0.00813061875738
+new alpha bounds: 0  0.0131556175001
+[[  1.00000000e-02   1.93001397e+00]
+ [  3.75000000e-01   1.92308592e+00]
+ [  7.50000000e-01   1.92795078e+00]
+ [  1.12500000e+00   1.90647691e+00]
+ [  1.50000000e+00  -8.13061876e-04]]
+
+nowU: 9.8900447437   alpha = 0.00813061875829
+nowL: 9.6016060049   alpha = 0.00502499874179
+new alpha bounds: 0  0.00813061875829
+[[  1.00000000e-02   1.93303956e+00]
+ [  3.75000000e-01   1.92875778e+00]
+ [  7.50000000e-01   1.93176443e+00]
+ [  1.12500000e+00   1.91849285e+00]
+ [  1.50000000e+00  -5.02499874e-04]]
+
+nowU: 9.6016060049   alpha = 0.00502499874235 #HERE: nowU is lower than nowL
+nowL: 9.8858722895   alpha = 0.00310562001594
+new alpha bounds: 0  0.00502499874235
+[[  1.00000000e-02   1.93490947e+00]
+ [  3.75000000e-01   1.93226319e+00]
+ [  7.50000000e-01   1.93412140e+00]
+ [  1.12500000e+00   1.92591911e+00]
+ [  1.50000000e+00  -3.10562002e-04]]
+
+nowU: 9.8858722895   alpha = 0.00310562001629
+nowL: 10.0613062423   alpha = 0.00191937872605
+new alpha bounds: 0  0.00310562001629
+[[  1.00000000e-02   1.93606514e+00]
+ [  3.75000000e-01   1.93442965e+00]
+ [  7.50000000e-01   1.93557808e+00]
+ [  1.12500000e+00   1.93050879e+00]
+ [  1.50000000e+00  -1.91937873e-04]]
+
+nowU: 10.0613062423   alpha = 0.00191937872627
+nowL: 10.1695735062   alpha = 0.00118624129002
+new alpha bounds: 0  0.00191937872627
+[[  1.00000000e-02   1.93677938e+00]
+ [  3.75000000e-01   1.93576859e+00]
+ [  7.50000000e-01   1.93647837e+00]
+ [  1.12500000e+00   1.93334537e+00]
+ [  1.50000000e+00  -1.18624129e-04]]
+
+nowU: 10.1695735061   alpha = 0.00118624129015
+nowL: 10.2364872129   alpha = 0.000733137436115
+new alpha bounds: 0  0.00118624129015
+[[  1.00000000e-02   1.93722081e+00]
+ [  3.75000000e-01   1.93659610e+00]
+ [  7.50000000e-01   1.93703477e+00]
+ [  1.12500000e+00   1.93509847e+00]
+ [  1.50000000e+00  -7.33137436e-05]]
+
+nowU: 10.2364872129   alpha = 0.000733137436197
+nowL: 10.2778275355   alpha = 0.000453103853958
+new alpha bounds: 0  0.000733137436197
+[[  1.00000000e-02   1.93749362e+00]
+ [  3.75000000e-01   1.93710754e+00]
+ [  7.50000000e-01   1.93737865e+00]
+ [  1.12500000e+00   1.93618195e+00]
+ [  1.50000000e+00  -4.53103854e-05]]
+[[ 0.01        1.93793505]
+ [ 0.1875      1.93793505]
+ [ 0.375       1.93793505]
+ [ 0.5625      1.93793505]
+ [ 0.75        1.93793505]
+ [ 0.9375      1.93793505]
+ [ 1.125       1.93793505]
+ [ 1.3125      1.93793505]
+ [ 1.5         0.        ]]
+Er_stat w/ initial grid: 9.5517481012

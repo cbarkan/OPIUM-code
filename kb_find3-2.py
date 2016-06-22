@@ -30,14 +30,14 @@ New in version 3-2
 ##################################
 #INPUTS SECTION: Adjust the variables below as desired.
 ##################################
-filename = 'v2' #(must be string) Write this as string without a file extension (i.e. 'Fe' is correct, 'Fe.param' is incorrect)
-initial_box_num = 4 #(must be integer) Number of KB boxes at start 
-box_splits = 3 #(must be integer) Number of times KB boxes qill split in half 
+filename = 'mo_1tc' #(must be string) Write this as string without a file extension (i.e. 'Fe' is correct, 'Fe.param' is incorrect)
+initial_box_num = 1 #(must be integer) Number of KB boxes at start 
+box_splits = 5 #(must be integer) Number of times KB boxes qill split in half 
 max_F = 1.5 #(must be float, if integer is desired, write 2.0, for example) Outer limit of KB boxes (in a.u.)
-tconfig_num = 6 #(must be integer) Number of test configurations, this number must match the corresponding number in the .param file
+tconfig_num = 10 #(must be integer) Number of test configurations, this number must match the corresponding number in the .param file
 alpha_step = 1.0 #(must be float, if integer is desired, write 2.0, for example) Initial step size in the search for optimal alpha
 local_orb = 's' #(must be string, either 's', 'p', 'd', or 'f') local orbital setting for augmentation function. 
-dV = 0.1 #(must be float) d(KB box height) for slope calculation and alpha search.
+dV = 0.05 #(must be float) d(KB box height) for slope calculation and alpha search.
 ##################################
 ##################################
 
@@ -87,7 +87,7 @@ def err_check(): #Runs OPIUM, checks test config errors and returns their sum
     else: #No error occured
         Er = np.ones((tconfig_num,2))
         Er_index = 0
-        DD = np.ones((tconfig_num*(tconfig_num-1)/2,1))
+        DD = np.ones((tconfig_num*(tconfig_num+1)/2,1))
         DD_index = 0
         for line in rpt:
             if line.startswith(" AE-NL-  t"):
@@ -95,7 +95,7 @@ def err_check(): #Runs OPIUM, checks test config errors and returns their sum
                 Er[Er_index,1] = float(line[42:58])
                 Er_index += 1
             elif line.startswith(" AE-NL-   ") and (not line.startswith(" AE-NL-   i")):
-                DD[Er_index,0] = abs(float(line[22:33]))
+                DD[DD_index,0] = abs(float(line[22:33]))
                 DD_index += 1
         
         rpt_file.write('#kb_find read-receipt')
@@ -104,7 +104,8 @@ def err_check(): #Runs OPIUM, checks test config errors and returns their sum
         #Er_stat = sum(Er[:,0]) #Sum of test config eigenvalue errors
         #Er_stat = sum(sum(DD)) #Sum of energy differences
         #Er_stat = sum(sum(Er)) #Sum of eigenvalue errors and norm errors
-        Er_stat = sum(sum(Er))/tconfig_num + sum(sum(DD))/(tconfig_num*(tconfig_num-1)/2) #Sum of avg eigenvalue error, avg norm error, and avg energy difference
+        #Er_stat = sum(sum(Er))/tconfig_num + sum(sum(DD))/(tconfig_num*(tconfig_num-1)/2) #Sum of avg eigenvalue error, avg norm error, and avg energy difference
+        Er_stat = Er[0,0] + Er[0,1]
     return Er_stat
 
 #_____________________________________________________
@@ -120,6 +121,7 @@ setKB(grid)
 before = err_check() #Run an initial trial with no boxes: no OPIUM error should result if other parameters are chosen well
 
 #Find random starting point that does not produce errors
+
 before = float('inf')
 while before == float('inf'):
     for i in np.arange(0,grid_size):
@@ -127,6 +129,8 @@ while before == float('inf'):
     
     setKB(grid)
     before = err_check()
+
+
 print 'Initial grid:'
 print grid
 
@@ -140,9 +144,10 @@ for mm in range(1,box_splits+1):
             now = err_check() #Check results
             slope[i] = (now - before)/dV #Record slope
             grid[i,1] = grid[i,1] - dV #Restore grid to previous value
-            
+        print slope    
         alpha = alpha_step
         grid_orig = grid.copy()
+        grid_before = grid.copy()
 
         #Let alpha "travel" to optimal range
         grid[:,1] = grid_orig[:,1] - alpha*dV*np.transpose(slope)
@@ -150,6 +155,7 @@ for mm in range(1,box_splits+1):
         now = err_check()
         print 'alpha: ' + str(alpha)+ '    Er_stat: ' + str(now)
         while now < before:
+            grid_before = grid.copy()
             before = now
             alpha += alpha_step
             grid[:,1] = grid_orig[:,1] - alpha*dV*np.transpose(slope)
@@ -175,11 +181,11 @@ for mm in range(1,box_splits+1):
             gridL[:,1] = grid_orig[:,1] - alpha*dV*np.transpose(slope)
             setKB(gridL)
             nowL = err_check()
-            if nowL ==float('inf'): #If gridL produced OPIUM error, ensure lower bound on alpha does not change
-                nowL = 0
+            if nowL == float('inf'): #If gridL produced OPIUM error, ensure lower bound on alpha does not change
+                nowL = -1*nowL
             print 'nowL: ' + str(nowL) +  '   alpha = ' + str(alpha)
 
-            if nowU < nowL:
+            if (nowU < nowL) and (nowU < before):
                 alpL = alpU - (alpU - alpL)/phi
                 print 'new alpha bounds: ' + str(alpL) + '  ' + str(alpU)
                 print gridU
@@ -189,14 +195,33 @@ for mm in range(1,box_splits+1):
                 print gridL
         
         #Save results of last iteration for the return to the top of jj loop
-        if nowU < nowL:
-            grid = gridU
+        if (before < nowU) and (before < abs(nowL)): #No improvement from previous jj iteration
+            print 'choosing before. before = ' + str(before)
+            print 'End of jj loop:'
+            grid = grid_before.copy()
+            setKB(grid)
+            Er_stat = err_check()
+            print 'final grid:'
+            print grid
+            print 'final Er_stat'
+            print Er_stat
+            print '\n \n'
+            break #leave loop to split boxes
+        elif nowU < nowL:
+            grid = gridU.copy()
             before = nowU
         else:
-            grid = gridL
+            grid = gridL.copy()
             before = nowL
         
-        print 'End of jj loop'
+        print 'End of jj loop:'
+        setKB(grid)
+        Er_stat = err_check()
+        print 'final grid:'
+        print grid
+        print 'final Er_stat'
+        print Er_stat
+        print '\n \n'
         
     #Split grid: each box splits in half
     grid_size = initial_box_num * (2**mm)
@@ -210,6 +235,9 @@ for mm in range(1,box_splits+1):
         grid[2*i,1] = grid_old[i,1]
         grid[2*i+1,1] = grid_old[i,1]
     
-    print grid
-        
-        
+grid_size = grid_size/2
+setKB(grid_old)
+Er_stat = err_check()
+print '\n' + 'final Er_stat = ' + str(Er_stat)
+print 'final grid:'
+print grid_old
