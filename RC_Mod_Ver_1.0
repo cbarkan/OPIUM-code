@@ -1,0 +1,240 @@
+"""
+RC Modification Code Version 1.0
+
+
+Purpose of this code:
+        This code is designed to iterate through a desired range of values for a single RC value.
+
+
+How to use this code:
+        To use this code, all that is needed is a correctly-structured .param file, utilizing GGA (see http://www.sas.upenn.edu/rappegroup/research/PSP/PBEGGA/mn.optgga1.param for an example). To execute the program, run the program under python in the home screen, and input the desired values when prompted. The program will print out the results of each iteration, including reference configuration error, presence of ghosts in the PS, Ecut values for 10meV, and the mean and root mean squared of the transferability errors.
+
+
+Other Notes:
+        The code is not yet designed to detect typos in inputs. If the code reads an improper value, it will immediately terminate. In addition, this code cannot yet detect issues with the OPIUM code; if there are issues that cause OPIUM to exit early, the code will print the error line, but the user usually will have to terminate the code him/herself.
+
+
+Possible Future Versions:
+        The next version will include the ability to store data inside of a matrix and self-optimization.
+"""
+#Imports
+from subprocess import call
+import math
+
+#FOR DA BLING
+class color:
+    bold = '\033[1m'
+    end = '\033[0m'
+    blue = '\033[94m'
+
+#Defining Functions
+def paramVariables(): #Finds length of .param file
+    param_file = open(filename + '.param', 'r')
+    param = param_file.readlines()
+
+    k = 0
+    q = 1
+    p = 1
+
+    a1 = ' '
+    b1 = ' '
+    c1 = ' '
+    d1 = ' '
+    e1 = ' '
+
+    numRC1 = 0
+    QCvalue1 = 0
+    numConfig1 = 0
+    lengthTC1 = 0
+    for line in param:
+        if k == 1:
+            RCstuff =  line.split()
+            numRC1 = int(RCstuff[0])
+            for i in range(0, numRC1):
+                if q == 1:
+                    a1 = float(RCstuff[1])
+                    q += 1
+                elif q == 2:
+                    b1 = float(RCstuff[2])
+                    q += 1
+                elif q == 3:
+                    c1 = float(RCstuff[3])
+                    q += 1
+                elif q == 4:
+                    d1 = float(RCstuff[4])
+                    q += 1
+                elif q == 5:
+                    e1 = float(RCstuff[5])
+                    q += 1
+
+            k += 1
+        elif k == 3:
+            QCvalue1 = float(line[0:4])
+            k += 1
+        elif k == 5:
+            numConfig1 = int(line[0])
+            for i in range(0, numConfig1):
+                lengthTC1 += p
+                p += 1
+            k += 1
+        elif line.startswith('[Pseudo]'):
+            k += 1
+        elif line.startswith('[Optinfo]'):
+            k += 1
+        elif line.startswith('[Configs]'):
+            k += 1
+
+    return numRC1, a1, b1, c1, d1, e1, QCvalue1, numConfig1, lengthTC1
+
+def RCModVarInput(a2,b2,c2,d2,e2):
+    iterRC1 = int(raw_input("What RC value would you like to modify? (Please use a integer value between 1 and " + str(numRC) + "): "))
+    maxValue1 = float(raw_input("Type in an upper bound for RC" + str(iterRC1) + " to two decimal places (i.e. 1.89): "))
+    minValue1 = float(raw_input("Type in an lower bound for RC" + str(iterRC1) + " to two decimal places (1.e. 1.00): "))
+    stepValue1 = float(raw_input("Type in an lower bound for RC" + str(iterRC1) + " to two decimal places (i.e. 0.01): "))
+    numPCC1 = float(raw_input("How many of these RC are due to partial core correction?: "))
+    rangeValue1 = int(((maxValue1 - minValue1)/stepValue1)+1)
+
+    if iterRC1 == 1:   #Assigns maxValue to RC that is being iterated
+        a2 = maxValue1
+    elif iterRC1 == 2:
+        b2 = maxValue1
+    elif iterRC1 == 3:
+        c2 = maxValue1
+    elif iterRC1 == 4:
+        d2 = maxValue1
+    elif iterRC1 == 5:
+        e2 = maxValue1
+
+    return iterRC1, maxValue1,  stepValue1, numPCC1, rangeValue1, a2, b2, c2, d2, e2
+
+
+def setRC():   #Inserts RC values into .param file
+    #Get param file text
+    param_file = open(filename + '.param', 'r')
+    param = param_file.readlines()
+    param_file.close
+
+    #Open param file for rewrite
+    param_file = open(filename + '.param', 'w')
+
+    for line in param:
+        if line.startswith(str(numRC) + " "):
+          param_file.write(str(numRC) + " " + str(a) + " " + str(b) + " " + str(c) + " " + str(d) + " " + str(e) + "\n")
+        else:                 #This copies the rest of the file as is
+            param_file.write(line)
+    param_file.close
+    return
+
+
+
+def valuesPrint():  #Runs Opium and prints result
+    call('opium ' + filename + '.param ' + filename +'.log ae ps nl ke tc rpt', shell=True)
+
+    rpt_file = open(filename + '.rpt', 'r')
+    rpt = rpt_file.readlines()
+
+    l = 1  #Keeps track of line
+    u = 0
+
+    newTransValueRMS = 0
+    newTransValueMean = 0
+
+    aeLengthStart = 0
+    lengthAE = 0
+    psReportLine = 0
+    nlReportLineStart = 9999
+    keReportLineStart = 9999
+    tcReportLineStart = 9999
+
+    for line in rpt:
+        if line.startswith('### AE'):  #Determines lines in .rpt to read
+            aeLengthStart = l + 3
+        elif line.startswith('      E_tot') and u == 0:
+            lengthAE = (l - 2) - aeLengthStart
+            u += 1
+        elif line.startswith('### PS'):
+            psReportLine = l + 6 + (numRC - numPCC) + 2
+        elif line.startswith('### NL'):
+            nlReportLineStart = l + 5
+        elif line.startswith('### KE'):
+            keReportLineStart = l + (12 + 2*numRC)
+        elif line.startswith('### TC'):
+            tcReportLineStart = l + 8 + ((15 + lengthAE + 2*numRC)*numConfig)
+
+
+
+        elif l == psReportLine:                                                                                          #Prints out RC and error values
+            newErrorValue = float(line[55:67])
+            print color.bold + color.blue + "RC Values: " + color.end + str(a) + " " + str(b) + " " + str(c) + " " + str(d) + " " + str(e)
+            if newErrorValue > 10.00:
+                print color.bold + color.blue + "Error: " + color.end + line[55:67] + "                  OVER THE LIMIT"
+            else:
+                print color.bold + color.blue + "Error: " + color.end + line[55:67]
+            print color.bold + color.blue + "\nGhosts in non-local pseudopotential" + color.end
+        elif l >= nlReportLineStart and l <= (nlReportLineStart - 1) + numRC:                                            #Prints out if ghosts exist in non-local pseudopotential
+            print "(" + line[1:4] + "): " +  line[51:54]
+
+        elif l == nlReportLineStart + numRC:
+            print color.bold + color.blue + "\nEcut Values" + color.end
+        elif l >= keReportLineStart and l <= (keReportLineStart - 1) + numRC:                                            #Prints out Ecut values
+            newEcutValue = float(line[11:14])
+            if abs(newEcutValue) > math.ceil(QCvalue**2):
+                print "(" + line[1:4] + "): " + line[11:14] + "                           OVER THE LIMIT"
+            else:
+                print "(" + line[1:4] + "): " + line[11:14]
+        elif l >= tcReportLineStart and l <= (tcReportLineStart - 1) + lengthTC:                                         #Prints out root mean square of tranferability errors
+            newTransValueMean += (abs(float(line[36:47])))
+            newTransValueRMS += ((float(line[36:47])**2))
+            if l == (tcReportLineStart - 1) + lengthTC:
+                print color.bold + color.blue + "\nTransferability Error" + color.end
+                newTransValueRMS = ((newTransValueRMS/(lengthTC))**(0.5))
+                newTransValueMean = newTransValueMean/(lengthTC)
+                if newTransValueRMS >= 200.00:
+                    print "Root Mean Squared: " + str(newTransValueRMS) + "       OVER THE LIMIT"
+                else:
+                    print "Root Mean Squared: " + str(newTransValueRMS)
+                if newTransValueMean >= 200.00:
+                    print "Mean Error from Zero: " + str(newTransValueMean) + "    OVER THE LIMIT"
+                else:
+                    print "Mean Error from Zero: " + str(newTransValueMean)
+        l += 1
+    rpt_file.close
+    return
+
+
+
+
+
+
+
+								         #Program Start
+
+
+print "\n\n                                                         START OF RC MOD PROGRAM\n"
+
+#Variable Setup:
+filename = raw_input("\n\nPlease type in the name of your .param file (without the extension): ")  #User input filename
+numRC, a, b, c, d, e, QCvalue, numConfig, lengthTC = paramVariables() #Obtains info from .param file
+iterRC, maxValue, stepValue, numPCC, rangeValue, a, b, c, d, e = RCModVarInput(a,b,c,d,e) #User input values
+
+
+#Performing iterations
+for i in range (rangeValue):
+
+	print "\n \n \n"
+	setRC()
+	valuesPrint()
+
+
+	if iterRC == 1:   #Iterates RC values
+ 		a -= stepValue
+	elif iterRC == 2:
+ 		b -= stepValue
+ 	elif iterRC == 3:
+ 		c -= stepValue
+ 	elif iterRC == 4:
+ 		d -= stepValue
+ 	elif iterRC == 5:
+ 		e -= stepValue
+
+print "\n\n":
