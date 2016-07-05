@@ -367,7 +367,7 @@ for jj in range(box_splits+1):
         if np.all(slope == np.zeros((grid_size+1,1))): #if slope = 0
             print 'No good slope found'
             break
-        alpha = alpha_find(grid)
+        alpha = alpha_find(grid,alpha_step)
         grid[:,1] = grid[:,1] - alpha*dV*np.transpose(slope)
         print grid
         count +=1
