@@ -172,7 +172,7 @@ def slope_find_shift(grid,boxes_per_block,shift):
     return slope
 
 phi = 1.6180339887
-def alpha_find(grid):
+def alpha_find(grid,alpha_step):
     #aL / ErL == alpha_lower / Error_lower
     #amL / ErmL == alpha_middle-lower / Error_middle-lower
     #amU / ErmU == alpha_middle-upper / Error_middle-upper
@@ -202,7 +202,8 @@ def alpha_find(grid):
         print 'Alpha didnt travel, reducing alpha_step'
         count = 0
         for i in range(15):
-            aU = aU/2
+            aU = aU/4
+            alpha_step = alpha_step/4
             ErU = err_check(aU,grid,slope)
             if ErU < ErmL:
                 while ErU < ErmL:
@@ -243,6 +244,9 @@ def alpha_find(grid):
             ErmU = ErmL
             amL = aU - (aU - aL)/phi
             ErmL = err_check(amL,grid,slope)
+            if amL > amU:
+                amL,amU = amU,amL
+                ErmL,ErmU = ErmU,ErmL
             print 'amL = ' + str(amL) + '  ErmL = ' + str(ErmL)
             print '%s %s %s %s' % (aL, amL, amU, aU)
             print '%s %s %s %s' % (ErL, ErmL, ErmU, ErU)
@@ -297,6 +301,39 @@ def box_smooth(weight):
 
     return grid_smooth
 
+def adjust_individual_box(grid,test_range,test_step,fig_num):
+    grid_test = grid.copy()
+    bestErrors = np.ones((grid_size,2))
+    for box in range(grid_size):
+        test_errors = np.zeros((2*test_range/test_step,2))
+        for mm in range(int(2*test_range/test_step)):
+            height = -1*test_range + mm*test_step + grid[box,1]
+            grid_test[box,1] = height
+            test_errors[mm,0] = height
+            test_errors[mm,1] = err_check(0,grid_test,slope)
+        grid_test[box,1] = grid[box,1]
+        print 'test_errors for box %s of %s' % (box,grid_size-1)
+        print test_errors
+
+        bestIndex = np.argmin(test_errors[:,1])
+        bestErrors[box,:] = test_errors[bestIndex,:]
+
+        plt.figure(fig_num)
+        fig_num += 1
+        plt.plot(test_errors[:,0],test_errors[:,1])
+        title = 'box_%s_of_%s' % (box,grid_size-1)
+        plt.title('Error vs Height,' + title)
+        plt.savefig(title + '.png')
+
+    print 'bestErrors; the bestHeight and its error for each box:'
+    print bestErrors
+    bestIndex = np.argmin(bestErrors[:,1])
+    print 'chose box %s' % bestIndex
+    grid_test[bestIndex,1] = bestErrors[bestIndex,0]
+    print 'grid:'
+    print grid_test
+    return grid_test, fig_num
+
 #_______________________________________________________________
 
 print 'filename = %s' % filename
@@ -342,7 +379,7 @@ for jj in range(box_splits+1):
     grid_size = initial_box_num * (2**(jj+1))
     grid_old = grid.copy()
     grid = grid_split(grid_old,grid_size)
-    grid = box_smooth(weight)
+    #grid = box_smooth(weight)
 
 #grid_size = grid_size/2 #Sets grid size to size of grid_old to find final error
 grid_size = grid_size/2
