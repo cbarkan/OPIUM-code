@@ -2,12 +2,10 @@
 #INPUTS SECTION: Adjust the variables below as desired.
 ##################################
 filename = 'v' #(must be string) Write this as string without a file extension (i.e. 'Fe' is correct, 'Fe.param' is incorrect)
-z = 23 #Atomic number of element
-initial_box_num = 2 #(must be integer) Number of KB boxes at start 
-box_splits = 0 #(must be integer) Number of times KB boxes qill split in half 
+initial_box_heights = [0.0,0.0] #Write initial box heights in a list with format [height1,height2,height3] where heightx is a float. This list can be any length, and it's length determines the initial number of boxes
+box_splits = 0 #(must be integer) Number of times KB boxes will split in half 
 max_F = 1.5 #(must be float, if integer is desired, write 2.0, for example) Outer limit of KB boxes in a.u.
-tconfig_num = 5 #(must be integer) Number of test configurations, this number must match the corresponding number in the .param file
-local_orb = 's' #(must be string, either 's', 'p', 'd', or 'f') local orbital setting for augmentation function. 
+local_orb = 's' #(must be string, either 's', 'p', 'd', or 'f') local orbital setting for augmentation function.
 ##################################
 ##################################
 
@@ -20,7 +18,6 @@ slopeCheckAlpha = 1.0
 loop_end_it = 50
 timeout_sec = 30
 
-
 import numpy as np
 from subprocess import Popen
 import threading
@@ -28,6 +25,54 @@ from random import uniform
 import time
 
 #Define functions:
+
+element_list = {'H':1,'He':2,'Li':3,'Be':4,'B':5,'C':6,'N':7,'O':8,'F':9,'Ne':10,'Na':11,'Mg':12,'Al':13,'Si':14,'P':15,'S':16,'Cl':17,'Ar':18,'K':19,'Ca':20,'Sc':21,'Ti':22, 'V':23,'Cr':24,'Mn':25,'Fe':26,'Co':27,'Ni':28,'Cu':29,'Zn':30,'Ga':31,'Ge':32,'As':33,'Se':34,'Br':35,'Kr':36,'Rb':37,'Sr':38,'Y':39,'Zr':40,'Nb':41,'Mo':42,'Tc':43,'Ru':44,'Rh':45,'Pd':46,'Ag':47,'Cd':48,'In':49,'Sn':50,'Sb':51,'Te':52,'I':53,'Xe':54,'Cs':55,'Ba':56,'La':57,'Ce':58,'Pr':59,'Nd':60,'Pm':61,'Sm':62,'Eu':63,'Gd':64,'Tb':65,'Dy':66,'Ho':67,'Er':68,'Tm':69,'Yb':70,'Lu':71,'Hf':72,'Ta':73,'W':74,'Re':75,'Os':76,'Ir':77,'Pt':78,'Au':79,'Hg':80,'Tl':81,'Pb':82,'Bi':83,'Po':84,'At':85,'Rn':86,'Fr':87,'Ra':88,'Ac':89,'Th':90,'Pa':91,'U':92,'Np':93,'Pu':94,'Am':95,'Cm':96,'Bk':97,'Cf':98,'Es':99,'Fm':100,'Md':101,'No':102,'Lr':103,'Rf':104,'Db':105,'Sg':106,'Bh':107,'Hs':108,'Mt':109,'Ds':110,'Rg':111,'Cn':112}
+def getParams():
+    param_file = open(filename + '.param', 'r')
+    param = param_file.readlines()
+    param_file.close
+
+    index = 0
+    got_element = 0
+    got_tconfig = 0
+    num_lines = len(param)
+    for jj in range(num_lines):
+        if got_tconfig + got_element == 2:
+            break
+        elif index >= num_lines - 1:
+            if got_element == 0:
+                print 'ERROR: element symbol not found in .param file. Check .param file formatting.'
+            if got_tconfig == 0:
+                print 'ERROR: number of test configurations not found in .param file. Check .param file formatting.'
+            print 'Exiting kb_find due to improper .param file format.'
+            quit()
+        else:
+            line = param[index]
+            if line.startswith('[Atom]'):
+                element = param[index+1][0:2]
+                if element[1] == ' ' or '#':
+                    element = element[0]
+                count = 1
+                for i in element_list:
+                    count += 1
+                    if i == element:
+                        z = element_list[element]
+                        index+=2
+                        got_element = 1
+                        break
+                    elif count >= len(element_list):
+                        print 'Element not found: in the .param file, the first letter of the element symbol must be upper case, and the second letter lower case. Also, the kb_find dictionary of elements goes up to atomic number 112, if you are using a heavier element, add it to the dictionary element_list. If neither of these fixes the problem, check the format of the .param file.'
+                        print 'Exiting kb_find'
+                        quit()
+            elif line.startswith('[Configs]'):
+                tconfig_num = int(param[index+1][0])
+                index+=2
+                got_tconfig = 1
+            else:
+                index += 1
+
+    return z, tconfig_num
+
 def setKB(grid): #Sets [KBdesign] in .param file to specified grid
     #Get param file text
     param_file = open(filename + '.param', 'r')
@@ -119,24 +164,25 @@ def slope_find(grid):
             grid_test[i,1] = grid_test[i,1] - dV #Restore grid to previous value
     
     slope_length = (sum(np.square(slope)))**(0.5)
-    print 'slope_length = %s' % slope_length
-    error_now = err_check(slopeCheckAlpha/slope_length,grid_test,slope)
-    if error_now >= error_before: #If no good slope, then try other method of calculating slope
-        print 'No slope yet: trying alternative method'
-        slope = np.zeros((grid_size+1,1))
-        #error_before = err_check(0,grid_test,slope)
-        for i in range(grid_size): #Find slope for each bin
-            grid_test[i,1] = grid_test[i,1] + dV #Change height of ith box by dV
-            error_now = err_check(0,grid_test,slope) #Check results
-            if error_now == float('inf'):
-                print 'got inf during slope calc'
-                continue
-            else:
-                slope[i] = (error_now - error_before)/dV #Record slope
-        
-        error_now = err_check(slopeCheckAlpha,grid_test,slope)
-        if error_now >= error_before: #If no good slope
+    if slope_length != 0:
+        print 'slope_length = %s' % slope_length
+        error_now = err_check(slopeCheckAlpha/slope_length,grid_test,slope)
+        if error_now >= error_before: #If no good slope, then try other method of calculating slope
+            print 'No slope yet: trying alternative method'
             slope = np.zeros((grid_size+1,1))
+            #error_before = err_check(0,grid_test,slope)
+            for i in range(grid_size): #Find slope for each bin
+                grid_test[i,1] = grid_test[i,1] + dV #Change height of ith box by dV
+                error_now = err_check(0,grid_test,slope) #Check results
+                if error_now == float('inf'):
+                    print 'got inf during slope calc'
+                    continue
+                else:
+                    slope[i] = (error_now - error_before)/dV #Record slope
+            
+            error_now = err_check(slopeCheckAlpha,grid_test,slope)
+            if error_now >= error_before: #If no good slope
+                slope = np.zeros((grid_size+1,1))
     
     print 'slope:'
     print slope
@@ -252,9 +298,10 @@ def grid_split(grid_old,grid_size):
 
 #_______________________________________________________________
 
+z, tconfig_num = getParams()
+
 print 'filename = %s' % filename
 print 'z = %s' % z
-print 'initial_box_num = %s' % initial_box_num
 print 'box_splits = %s' % box_splits
 print 'max_F = %s' % max_F
 print 'tconfig_num = %s' % tconfig_num
@@ -268,13 +315,18 @@ print 'loop_end_it = %s' %loop_end_it
 print 'timeout_sec = %s' %timeout_sec
 
 #Initialize grid for KB boxes. Creates grid in grid point units
-grid_size = initial_box_num
+grid_size = len(initial_box_heights)
 grid = np.zeros((grid_size+1,2))
 grid[0,0] = np.rint(np.log(0.01/(a*(z**(-1.0/3.0))))/b + 1)
 for i in np.arange(1,grid_size+1): #Set box bounds
     grid[i,0] = i*max_F/grid_size #UNITS: a.u.
     grid[i,0] = np.log(grid[i,0]/(a*(z**(-1.0/3.0))))/b + 1 #Converts to g.p units
     grid[i,0] = np.rint(grid[i,0]) #Ensures integer values of g.p
+
+initial_box_heights = np.concatenate((np.array(initial_box_heights),[0.0]),axis = 0)
+grid[:,1] = initial_box_heights
+print 'initial grid:'
+print grid
 
 loop_ends = 0 #Number of times for-loop to recalculate slope ended without reaching minimum
 for jj in range(box_splits+1):
