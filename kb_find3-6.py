@@ -3,13 +3,13 @@
 ##################################
 filename = 'v' #(must be string) Write this as string without a file extension (i.e. 'Fe' is correct, 'Fe.param' is incorrect)
 initial_box_heights = [0.0,0.0] #Write initial box heights in a list with format [height1,height2,height3] where heightx is a float. This list can be any length, and it's length determines the initial number of boxes
-box_splits = 0 #(must be integer) Number of times KB boxes will split in half 
-max_F = 1.5 #(must be float, if integer is desired, write 2.0, for example) Outer limit of KB boxes in a.u.
+box_splits = 1 #(must be integer) Number of times KB boxes will split in half 
+max_F = 1.5 #(must be float) Outer limit of KB boxes in a.u.
 local_orb = 's' #(must be string, either 's', 'p', 'd', or 'f') local orbital setting for augmentation function.
 ##################################
 ##################################
 
-#Other variables: Typically these should not be changed!
+#Other input variables: Typically these should not be changed!
 alpha_step = 10000.0 #(must be float, if integer is desired, write 2.0, for example) Initial step size in the search for optimal alpha
 dV = 0.0000001 #(must be float) d(KB box height) for slope calculation and alpha search.
 a = 0.0001 #Parameter which defines grid point spacing. Do not change unless you make a corresponding change in OPIUM
@@ -346,7 +346,7 @@ for jj in range(box_splits+1):
             
     #split boxes
     print 'splitting boxes \n'
-    grid_size = initial_box_num * (2**(jj+1))
+    grid_size = grid_size*2
     grid_old = grid.copy()
     grid = grid_split(grid_old,grid_size)
 
