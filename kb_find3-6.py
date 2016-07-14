@@ -1,7 +1,7 @@
 ##################################
 #INPUTS SECTION: Adjust the variables below as desired.
 ##################################
-filename = 'v' #(must be string) Write this as string without a file extension (i.e. 'Fe' is correct, 'Fe.param' is incorrect)
+filename = 'mn' #(must be string) Write this as string without a file extension (i.e. 'Fe' is correct, 'Fe.param' is incorrect)
 initial_box_heights = [0.0,0.0] #Write initial box heights in a list with format [height1,height2,height3] where heightx is a float. This list can be any length, and it's length determines the initial number of boxes
 box_splits = 1 #(must be integer) Number of times KB boxes will split in half 
 max_F = 1.5 #(must be float) Outer limit of KB boxes in a.u.
@@ -50,7 +50,7 @@ def getParams():
             line = param[index]
             if line.startswith('[Atom]'):
                 element = param[index+1][0:2]
-                if element[1] == ' ' or '#':
+                if element[1] == ' ':
                     element = element[0]
                 count = 1
                 for i in element_list:
