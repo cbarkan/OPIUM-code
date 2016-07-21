@@ -1,9 +1,9 @@
 ##################################
 #INPUTS SECTION: Adjust the variables below as desired.
 ##################################
-filename = 'mn' #(must be string) Write this as string without a file extension (i.e. 'Fe' is correct, 'Fe.param' is incorrect)
-initial_box_heights = [0.0,0.0] #Write initial box heights in a list with format [height1,height2,height3] where heightx is a float. This list can be any length, and it's length determines the initial number of boxes
-box_splits = 1 #(must be integer) Number of times KB boxes will split in half 
+filename = 'v' #(must be string) Write this as string without a file extension (i.e. 'Fe' is correct, 'Fe.param' is incorrect)
+initial_box_heights = [-5.0,3.0] #Write initial box heights in a list with format [height1,height2,height3] where heightx is a float. This list can be any length, and it's length determines the initial number of boxes
+box_splits = 0 #(must be integer) Number of times KB boxes will split in half 
 max_F = 1.5 #(must be float) Outer limit of KB boxes in a.u.
 local_orb = 's' #(must be string, either 's', 'p', 'd', or 'f') local orbital setting for augmentation function.
 ##################################
@@ -50,7 +50,7 @@ def getParams():
             line = param[index]
             if line.startswith('[Atom]'):
                 element = param[index+1][0:2]
-                if element[1] == ' ':
+                if element[1] == ' ' or '\n':
                     element = element[0]
                 count = 1
                 for i in element_list:
@@ -131,7 +131,10 @@ def err_check(alpha,grid,slope): #Runs OPIUM, checks test config errors and retu
         DD = np.ones((tconfig_num*(tconfig_num+1)/2,1))
         DD_index = 0
         for line in rpt:
-            if line.startswith(" AE-NL-  t"):
+            if line.startswith("  !!ERROR!!"):
+                #Ghosts in psp
+                return float('inf')
+            elif line.startswith(" AE-NL-  t"):
                 Er[Er_index,0] = float(line[22:38])
                 Er[Er_index,1] = float(line[42:58])
                 Er_index += 1
@@ -146,7 +149,7 @@ def err_check(alpha,grid,slope): #Runs OPIUM, checks test config errors and retu
         #Er_stat = sum(sum(DD)) #Sum of energy differences
         #Er_stat = sum(sum(Er)) #Sum of eigenvalue errors and norm errors
         #Er_stat = sum(sum(Er))/tconfig_num + sum(sum(DD))/(tconfig_num*(tconfig_num-1)/2) #Sum of avg eigenvalue error, avg norm error, and avg energy difference
-        Er_stat = Er[0,0] #+ Er[0,1]
+        Er_stat = Er[0,0] + Er[0,1]
     return Er_stat
 
 def slope_find(grid):
