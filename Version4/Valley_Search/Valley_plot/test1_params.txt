@@ -1,0 +1,1 @@
+v0_range=1.0v1_range=1.0v2_range=1.0step=0.5search_disp=0.5starting vector:[-4. -8. -4.  0.]

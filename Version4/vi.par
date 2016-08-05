@@ -1,0 +1,117 @@
+# IPS par file for xmgrace
+g0 on
+with g0
+world xmin 0
+world xmax 5
+world ymin -50
+world ymax 50
+title "Ionic pseudopotential for V"
+title font 0
+title size 1.500000
+title color 1
+subtitle "XC=Perdew-Zunger LDA   Optimized Pseudopotential Method   nrl"
+subtitle font 0
+subtitle size 1.000000
+subtitle color 1
+xaxis  on
+xaxis  tick major 1
+xaxis  tick minor 0.5
+xaxis  label "r (a.u.)"
+yaxis  on
+yaxis  tick major 10 
+yaxis  tick minor 2 
+yaxis  label "V\sion\N (Ry)"
+legend on
+legend loctype view
+legend 0.85, 0.8
+ s0 hidden false 
+ s0 type xydx 
+ s0 symbol 0 
+ s0 line type 1 
+ s0 line linestyle 1 
+ s0 line linewidth 2.0 
+ s0 line color 1 
+ s0 legend "V\ss\N" 
+ s0 errorbar on
+ s0 errorbar place both
+ s0 errorbar color 1
+ s0 errorbar pattern 1
+ s0 errorbar size 10.000000
+ s0 errorbar linewidth 2.0
+ s0 errorbar linestyle 1
+ s1 hidden false 
+ s1 type xydx 
+ s1 symbol 0 
+ s1 line type 1 
+ s1 line linestyle 1 
+ s1 line linewidth 2.0 
+ s1 line color 2 
+ s1 legend "V\sp\N" 
+ s1 errorbar on
+ s1 errorbar place both
+ s1 errorbar color 2
+ s1 errorbar pattern 1
+ s1 errorbar size 10.000000
+ s1 errorbar linewidth 2.0
+ s1 errorbar linestyle 1
+ s2 hidden false 
+ s2 type xydx 
+ s2 symbol 0 
+ s2 line type 1 
+ s2 line linestyle 1 
+ s2 line linewidth 2.0 
+ s2 line color 3 
+ s2 legend "V\sd\N" 
+ s2 errorbar on
+ s2 errorbar place both
+ s2 errorbar color 3
+ s2 errorbar pattern 1
+ s2 errorbar size 10.000000
+ s2 errorbar linewidth 2.0
+ s2 errorbar linestyle 1
+ s3 hidden false 
+ s3 type xydx 
+ s3 symbol 0 
+ s3 line type 1 
+ s3 line linestyle 2 
+ s3 line linewidth 2.0 
+ s3 line color 1 
+ s3 legend "V\ss\N" 
+ s3 errorbar on
+ s3 errorbar place both
+ s3 errorbar color 1
+ s3 errorbar pattern 1
+ s3 errorbar size 10.000000
+ s3 errorbar linewidth 2.0
+ s3 errorbar linestyle 1
+ s4 hidden false 
+ s4 type xydx 
+ s4 symbol 0 
+ s4 line type 1 
+ s4 line linestyle 2 
+ s4 line linewidth 2.0 
+ s4 line color 2 
+ s4 legend "V\sp\N" 
+ s4 errorbar on
+ s4 errorbar place both
+ s4 errorbar color 2
+ s4 errorbar pattern 1
+ s4 errorbar size 10.000000
+ s4 errorbar linewidth 2.0
+ s4 errorbar linestyle 1
+ s3 hidden false 
+ s3 type xydx 
+ s3 symbol 0 
+ s3 line type 1 
+ s3 line linestyle 3 
+ s3 line linewidth 2.0 
+ s3 line color 15 
+ s3 legend "2Z\seff\N /r"
+ s4 hidden false 
+ s4 type xydx 
+ s4 symbol 0 
+ s4 line type 1 
+ s4 line linestyle 3 
+ s4 line linewidth 3.0 
+ s4 line color 9 
+ s4 legend "V\sloc\N"

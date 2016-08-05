@@ -1,0 +1,16 @@
+Two coeff:
+Min from plot: 15.7538988509 at [9.0,7.0]
+starting near this min...
+Min from kb_find4-3.py: 14.4 at [8.166,7.714]
+Min from kb_find_cg2: 14.4 at [8.166,7.714]
+
+Cross-sections might be parabolic. Level curves are not eliptical
+
+Three coeff:
+Min from plot: 6.626 at [-4,-8,-4]
+starting near this min at [-3.5,-7.5,-3.5]
+Min from kb_find4-3.py: 5.9486603189 at [-3.68838595 -7.37290745 -3.55336439]
+Min from kb_find_cg2: 5.9460381355 at [-3.68902545 -7.37349236 -3.55263847]
+
+Cross-sections might be parabolic. Level curves don't look eliptical, but it's hard to say
+
