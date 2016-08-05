@@ -152,8 +152,8 @@ for i in np.arange(1,grid_size+1): #Set box bounds
     grid[i,0] = np.log(grid[i,0]/(a*(z**(-1.0/3.0))))/b + 1 #Converts to g.p units
     grid[i,0] = np.rint(grid[i,0]) #Ensures integer values of g.p
 
-coeff_vector = np.array([0.0,10.0,0.0])
+coeff_vector = np.array([7.9276,7.42515,-0.01788])
 
 Er_eig1, Er_norm1, Er_eig2, Er_norm2, Er_eig3, Er_norm3, Er_eig4, Er_norm4, Er_eig5, Er_norm5, DD = err_check(coeff_vector)
 
-print Er_eig1
+print Er_eig1+Er_norm1

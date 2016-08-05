@@ -1,0 +1,1 @@
+Zoom on coeff_vector = (-4,-8,-4). coeff1 is fixed at -4

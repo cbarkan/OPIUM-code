@@ -1,0 +1,16 @@
+4 coeff pseudocode:
+
+1. Pick starting point
+
+while error is improving:
+    Given starting point..
+    2. Line minimize along -1*gradient direction
+        -The resulting point will be in valley space, call the point r1
+    3. Pick 3 nearby points and line minimize, call the resulting points r2,r3,r4
+    4. Find "difference vecotrs r'2 r'3 r'4 where r'i = ri - r1
+    5. Check lengths and linear independence of r'2 r'3 r'4
+        - while (length of r'i is too small) or (r'i is in span{r'(j != i)}):
+            pick new point near r1 and line-minimize to find new ri and r'i
+    6. orthonormalize r'2 r'3 r'4 to get o.n. basis {v1,v2,v3} of valley space
+    7. Minimize error through valley space
+    8. New starting point is result of valley space minimization

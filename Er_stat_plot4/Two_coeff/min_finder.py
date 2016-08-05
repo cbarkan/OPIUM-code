@@ -1,6 +1,7 @@
 import numpy as np
 
 mesh = np.load('test1_Total.npy')
+#mesh = mesh
 c0_index = np.load('test1_c0_index.npy')
 c1_index = np.load('test1_c1_index.npy')
 minimum = np.min(mesh)
