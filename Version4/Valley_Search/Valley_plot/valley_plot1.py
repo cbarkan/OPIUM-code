@@ -14,12 +14,11 @@ a = 0.0001 #Parameter which defines grid point spacing. Do not change unless you
 b = 0.013 #Parameter which defines grid point spacing. Do not change unless you make a corresponding change in OPIUM
 timeout_sec = 30
 
-alpha_step = 1000.0
-slopeCheckAlpha = 0.00001
+alpha_step = 100000.0
+slopeCheckAlpha = 0.0000005
 resolution = 50.0 #boxes per a.u.
 x_min = 0.01
 x_max = 1.5
-search_disp = 0.5
 ############
 
 L = x_max
@@ -341,8 +340,8 @@ def slope_find(coord_vector,space_type):
     return slope
 
 def slope_sign_find(coord_vector):
-    plus = err_check(0.01,coord_vector,slope,'coeff')
-    minus = err_check(-0.01,coord_vector,slope,'coeff')
+    plus = err_check(slopeCheckAlpha,coord_vector,slope,'coeff')
+    minus = err_check(-1*slopeCheckAlpha,coord_vector,slope,'coeff')
     if plus < minus:
         return 1
     else:
@@ -360,14 +359,12 @@ def gs(X):
         Y[ii] = Y[ii]/np.linalg.norm(Y[ii])
     return Y
 
+search_disp = 0.01
 def valley_basis_find():
     R = np.zeros((valley_terms,coeff_terms))
     for ii in range(valley_terms):
         R[ii,0] = search_disp
         R[ii,ii+1] = -1*search_disp*slope[0]/slope[ii+1]
-        slope_approx = slope*slope_sign_find(R[ii] + origin_displacement)
-        alpha = alpha_find(10.0,'coeff')
-        R[ii] = R[ii] - alpha*slope_approx
         
         #Check for length
         r_norm = np.linalg.norm(R[ii])
@@ -383,6 +380,12 @@ def valley_basis_find():
                 raise ValueError('Linearly dependent r vectors')
 
     V = gs(R)
+    global slope
+    for ii in range(valley_terms):
+        slope = slope*slope_sign_find(V[ii] + origin_displacement)
+        alpha = alpha_find(10.0,'coeff')
+        R[ii] = R[ii] - alpha*slope
+        
     A = V.T
     
     return A
@@ -396,7 +399,7 @@ for i in np.arange(1,grid_size+1): #Set box bounds
     grid[i,0] = np.log(grid[i,0]/(a*(z**(-1.0/3.0))))/b + 1 #Converts to g.p units
     grid[i,0] = np.rint(grid[i,0]) #Ensures integer values of g.p
 
-coeff_vector = np.array([-4.0,-8.0,-4.0,0.0])
+coeff_vector = np.array([-3.79745533 ,-7.60036733 ,-3.80799175, -0.19730373])
 starting_coeffs = coeff_vector.copy()
 coeff_terms = len(coeff_vector)
 valley_terms = coeff_terms - 1
@@ -406,10 +409,10 @@ valley_terms = coeff_terms - 1
 
 
 #range from starting point:
-v0_range = 1.0
-v1_range = 1.0
-v2_range = 1.0
-step = 0.1
+v0_range = 0.5
+v1_range = 0.5
+v2_range = 0.5
+step = 0.05
 v0_trials = int(2*v0_range/step)
 v1_trials = int(2*v1_range/step)
 v2_trials = int(2*v2_range/step)
@@ -441,7 +444,6 @@ Eig5_mesh = Eig1_mesh.copy()
 Norm5_mesh = Norm1_mesh.copy()
 DD_mesh = np.ones((v0_trials,v1_trials,v2_trials,(tconfig_num*(tconfig_num+1)/2)))
 
-valley_vector = np.zeros(3)
 slope = np.zeros(valley_terms) #Reset slope
 
 start_time = time.time()
@@ -474,7 +476,7 @@ for v0 in range(v0_trials):
         print 'Estimated minutes until completion: %s' % ETA
 print 'Seconds per trial: %s' % ((time.time() - start_time)/num_trials)
 
-run_name = 'startn4-n8-n4-0'
+run_name = 'trial1'
 
 np.save(str(run_name) + '_Eig1.npy', Eig1_mesh)
 np.save(str(run_name) + '_Norm1.npy', Norm1_mesh)

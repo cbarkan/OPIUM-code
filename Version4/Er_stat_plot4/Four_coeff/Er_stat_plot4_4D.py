@@ -152,17 +152,19 @@ for i in np.arange(1,grid_size+1): #Set box bounds
     grid[i,0] = np.log(grid[i,0]/(a*(z**(-1.0/3.0))))/b + 1 #Converts to g.p units
     grid[i,0] = np.rint(grid[i,0]) #Ensures integer values of g.p
 
-coeff_vector = np.array([0.0,0.0,0.0,0.0])
+coeff_vector = np.array([-3.73227627, -7.66747669 ,-4.48063819, -0.9184885])
 
-c0_lower_bound = -4.5
-c0_upper_bound = -3.5
-c1_lower_bound = -8.5
-c1_upper_bound = -7.5
-c2_lower_bound = -4.5
-c2_upper_bound = -3.5
-c3_lower_bound = -0.5
-c3_upper_bound = 0.5
-mesh_step = 0.1
+c0_lower_bound = -3.73227627 - 0.000005
+c0_upper_bound = -3.73227627 + 0.000005
+c1_lower_bound = -7.66747669 - 0.000005
+c1_upper_bound = -7.66747669 + 0.000005
+c2_lower_bound = -4.48063819 - 0.000005
+c2_upper_bound = -4.48063819 + 0.000005
+c3_lower_bound = -0.9184885 - 0.000005
+c3_upper_bound = -0.9184885 + 0.000005
+mesh_step = 0.000005/7.0
+
+# -3.79997942 -7.60001415 -3.79999477 -0.20000152
 
 """
 c0_lower_bound = -1
@@ -238,7 +240,7 @@ print 'Elapsed time: %s' % elapsed_time
 time_per_trial = elapsed_time/num_trials
 print 'Time per trial: %s' % time_per_trial
 
-run_name = 'zoom_n4-n8-n4-0'
+run_name = 'vs6_result2'
 """
 plt.figure(0)
 plt.imshow(Eig_mesh, interpolation='none', origin = 'lower',extent=[c1_lower_bound,c1_upper_bound,c0_lower_bound,c0_upper_bound], norm=LogNorm(vmin=1, vmax=5000))

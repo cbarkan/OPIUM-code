@@ -16,8 +16,8 @@ a = 0.0001 #Parameter which defines grid point spacing. Do not change unless you
 b = 0.013 #Parameter which defines grid point spacing. Do not change unless you make a corresponding change in OPIUM
 timeout_sec = 30
 
-alpha_step = 1000.0
-slopeCheckAlpha = 0.00001
+alpha_step = 100000.0
+slopeCheckAlpha = 0.0000005
 resolution = 50.0 #boxes per a.u.
 x_min = 0.01
 x_max = 1.5
@@ -289,8 +289,8 @@ def slope_find(coord_vector,space_type):
     return slope
 
 def slope_sign_find(coord_vector):
-    plus = err_check(0.01,coord_vector,slope,'coeff')
-    minus = err_check(-0.01,coord_vector,slope,'coeff')
+    plus = err_check(slopeCheckAlpha,coord_vector,slope,'coeff')
+    minus = err_check(-1*slopeCheckAlpha,coord_vector,slope,'coeff')
     if plus < minus:
         return 1
     else:
@@ -308,15 +308,12 @@ def gs(X):
         Y[ii] = Y[ii]/np.linalg.norm(Y[ii])
     return Y
 
-def valley_basis_find():
-    R = np.zeros((valley_terms,coeff_terms))
-    for ii in range(valley_terms):
-        search_disp = 0.5
+def valley_basis_find(lower_space_terms,higher_space_terms):
+    R = np.zeros((lower_space_terms,higher_space_terms))
+    for ii in range(lower_space_terms):
+        search_disp = 0.01
         R[ii,0] = search_disp
         R[ii,ii+1] = -1*search_disp*slope[0]/slope[ii+1]
-        slope_approx = slope*slope_sign_find(R[ii] + origin_displacement)
-        alpha = alpha_find(10.0,'coeff')
-        R[ii] = R[ii] - alpha*slope_approx
         
         #Check for length
         r_norm = np.linalg.norm(R[ii])
@@ -332,12 +329,21 @@ def valley_basis_find():
                 raise ValueError('Linearly dependent r vectors')
 
     V = gs(R)
-    A = V.T
+    global slope
+    for ii in range(lower_space_terms):
+        coeff_vector = V[ii] + origin_displacement
+        slope = slope*slope_sign_find(coeff_vector)
+        alpha = alpha_find(10.0,'coeff')
+        V[ii] = V[ii] - alpha*slope
+        
+    M = V.T
     
-    return A
+    return M
+
 
 #__________________________________________________________
-coeff_vector = np.array([-4.0,-8.0,-4.0,0.0])
+#coeff_vector = np.array([-3.79745533 ,-7.60036733 ,-3.80799175, -0.19730373]) #Lowest minimum found
+coeff_vector = np.array([-4.0 ,-8.0 ,-4.0, 0.0])
 coeff_terms = len(coeff_vector)
 valley_terms = coeff_terms - 1
 best_coeff_vector = coeff_vector.copy()
@@ -357,7 +363,7 @@ for prim_iter in range(100):
     origin_displacement = coeff_vector.copy()
     
     print '\nFinding valley basis\n'
-    A = valley_basis_find()
+    A = valley_basis_find(valley_terms,coeff_terms)
     valley_vector = np.zeros(valley_terms)
     
     for sec_iter in range(100):
@@ -384,6 +390,14 @@ for prim_iter in range(100):
         print 'best_coeff_vector:'
         print best_coeff_vector
         print 'Er_stat = %s' % best_coeff_vector_error
+        """
+        for thrd_it in range(100):
+            innerValley_terms = valley_terms - 1
+            B = valley_basis_find(innerValley_terms,valley_terms)
+        """
+
+
+
         break
     
     coeff_vector = best_coeff_vector.copy()

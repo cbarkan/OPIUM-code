@@ -42,7 +42,7 @@ def cube_show_slider(cube):
 
     plt.show()
 #_________________________________________________
-filename = 'startn4-n8-n4-0'
+filename = 'trial1'
 
 v0_index = np.load(filename + '_v0_index.npy')
 v1_index = np.load(filename + '_v1_index.npy')
@@ -57,7 +57,7 @@ lower_ext1 = v1_index[0]
 upper_ext1 = v1_index[-1]
 lower_ext2 = v2_index[0]
 upper_ext2 = v2_index[-1]
-mesh_step = 0.1
+mesh_step = 0.05
 
 mesh = np.load(filename + '_Eig1.npy') + np.load(filename + '_Norm1.npy')
 

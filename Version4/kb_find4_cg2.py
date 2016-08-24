@@ -255,12 +255,12 @@ timeout_sec = 30
 
 terms = 2
 alpha_step = 1000.0
-slopeCheckAlpha = 0.000002
+slopeCheckAlpha = 0.0000005
 resolution = 50.0 #boxes per a.u.
 x_min = 0.01
 x_max = 1.5
-coeff_vector = np.array([-3.5,-7.5,-3.5])
-new_terms = 0
+coeff_vector = np.array([1.0,1.0,0.0,0.0,0.0,0.0])
+new_terms = 1
 ############
 
 grid_size = int((x_max - x_min)*resolution)
@@ -293,7 +293,7 @@ for ii in range(new_terms+1):
         print coeff_vector
         alpha = alpha_find(coeff_vector,alpha_step)
         coeff_vector = coeff_vector + alpha*d
-        path_plot()
+        #path_plot()
         current_Err = err_check(0,coeff_vector,np.zeros(terms))
         print 'coeff_vector:'
         print coeff_vector

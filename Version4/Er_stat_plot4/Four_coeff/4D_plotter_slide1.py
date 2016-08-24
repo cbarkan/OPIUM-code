@@ -49,7 +49,7 @@ def cube_show_slider(cube):
 
     plt.show()
 #_________________________________________________
-filename = 'zoom_n4-n8-n4-0'
+filename = 'vs6_result'
 
 c0_index = np.load(filename + '_c0_index.npy')
 c1_index = np.load(filename + '_c1_index.npy')
@@ -64,13 +64,16 @@ lower_ext2 = c2_index[0]
 upper_ext2 = c2_index[-1]
 lower_ext3 = c3_index[0]
 upper_ext3 = c3_index[-1]
-mesh_step = 0.1
+mesh_step = 0.0000005/7.0
 
 print 'lower_ext0 = %s' % lower_ext0
 print 'lower_ext1 = %s' % lower_ext1
 
 mesh = np.load(filename + '_Eig1.npy') + np.load(filename + '_Norm1.npy')
-min_value = 1
-max_value = 4000
+#mesh = mesh_real*10000.0
+min_value = np.min(mesh)
+max_value = np.max(mesh)
+print min_value
+print max_value
 
 cube_show_slider(mesh)

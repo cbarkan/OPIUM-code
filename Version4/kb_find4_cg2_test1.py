@@ -269,7 +269,7 @@ slopeCheckAlpha = 0.000002
 resolution = 50.0 #boxes per a.u.
 x_min = 0.01
 x_max = 1.5
-coeff_vector = np.array([-3.5,-7.5,-3.5])
+coeff_vector = np.array([-3.8,-7.6,-3.8,-0.2])
 new_terms = 0
 ############
 

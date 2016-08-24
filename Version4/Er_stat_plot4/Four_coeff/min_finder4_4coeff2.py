@@ -14,7 +14,7 @@ def min_directNeighbor_find(a,b,c,d):
     d_minus = Total_pad[a+1,b+1,c+1,d]
     return min(a_plus,a_minus,b_plus,b_minus,c_plus,c_minus,d_plus,d_minus)
 
-filename = 'zoom_n4-n8-n4-0'
+filename = 'vs6_result'
 Total = np.load(filename + '_Eig1.npy') + np.load(filename + '_Norm1.npy')
 Total_pad = np.pad(Total,((1,1),(1,1),(1,1),(1,1)),'maximum')
 
