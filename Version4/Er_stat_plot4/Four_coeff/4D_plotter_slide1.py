@@ -49,7 +49,7 @@ def cube_show_slider(cube):
 
     plt.show()
 #_________________________________________________
-filename = 'vs6_result'
+filename = 'step3'
 
 c0_index = np.load(filename + '_c0_index.npy')
 c1_index = np.load(filename + '_c1_index.npy')
@@ -64,7 +64,8 @@ lower_ext2 = c2_index[0]
 upper_ext2 = c2_index[-1]
 lower_ext3 = c3_index[0]
 upper_ext3 = c3_index[-1]
-mesh_step = 0.0000005/7.0
+mesh_step = (c0_index[-1] - c0_index[0])/(len(c0_index)-1)
+print mesh_step
 
 print 'lower_ext0 = %s' % lower_ext0
 print 'lower_ext1 = %s' % lower_ext1
